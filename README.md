@@ -110,7 +110,7 @@ Download the script into `~/scripts/`:
 mkdir -p ~/scripts
 
 curl -L \
-  https://github.com/ut-01/commit-slot/raw/refs/heads/main/commit-slot.sh \
+  https://raw.githubusercontent.com/ut-01/commit-slot/main/commit-slot.sh \
   -o ~/scripts/commit-slot.sh
 ```
 
