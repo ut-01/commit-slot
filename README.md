@@ -39,7 +39,7 @@ Normally, Git commits happen at whatever time you happen to run `git commit`.
         GIT_COMMITTER_DATE
                      │
                      ▼
-              git commit
+                  git commit
 ```
 
 ### Example
@@ -102,6 +102,42 @@ Git sees the generated timestamp automatically.
 
 ---
 
+## 📥 Install
+
+Download the script into `~/scripts/`:
+
+```bash
+mkdir -p ~/scripts
+
+curl -L \
+  https://github.com/ut-01/commit-slot/raw/refs/heads/main/commit-slot.sh \
+  -o ~/scripts/commit-slot.sh
+```
+
+Make it executable:
+
+```bash
+chmod +x ~/scripts/commit-slot.sh
+```
+
+Then expose it as a shell command:
+
+```bash
+alias commit-slot='source ~/scripts/commit-slot.sh'
+```
+
+Now from any Git repository:
+
+```bash
+commit-slot init
+commit-slot
+git commit -m "Add feature"
+```
+
+> **Tip:** Put the alias in your `~/.zshrc` or `~/.bashrc` to make `commit-slot` available in every new terminal.
+
+---
+
 ## 🧠 Smart timestamp progression
 
 `commit-slot` doesn't blindly use the current clock.
@@ -130,9 +166,7 @@ It considers the most recent timestamp from:
                     Next slot
 ```
 
-This means repeated calls continue moving forward instead of accidentally generating timestamps earlier than an existing commit.
-
-The generated slot is also persisted in `commit-slot.cfg`.
+The generated slot is persisted in `commit-slot.cfg`, so repeated calls continue moving forward.
 
 ---
 
@@ -148,8 +182,6 @@ Gap : 5 → 7 minutes
 
 The script avoids generating timestamps inside the restricted window.
 
-For example:
-
 ```text
 08:54
   │
@@ -164,47 +196,19 @@ For example:
 18:06  ✓ valid slot
 ```
 
-The configuration lives directly at the top of the script, making it easy to adapt.
-
 ---
 
 ## 🛠 Commands
 
 ```text
-commit-slot init
+commit-slot init       Enable commit-slot for this repository
+commit-slot            Generate and export the next timestamp
+commit-slot status     Show current slot information
+commit-slot reset      Reset the persisted timestamp
+commit-slot help       Show available commands
 ```
 
-Enable `commit-slot` for the current repository.
-
-Creates:
-
-```text
-commit-slot.cfg
-```
-
-and automatically adds it to `.gitignore`.
-
----
-
-```text
-commit-slot
-```
-
-Generate the next timestamp and export it to the current shell.
-
-Example:
-
-```text
-commit-slot: 2026-08-17T18:07:00+0530
-```
-
----
-
-```text
-commit-slot status
-```
-
-See what's happening:
+### Status example
 
 ```text
 commit-slot: enabled
@@ -214,14 +218,6 @@ interval:    5-7 minutes
 slot:        2026-08-17T18:07:00+0530
 last commit: 2026-08-17T18:01:00+0530
 ```
-
----
-
-```text
-commit-slot reset
-```
-
-Forget the persisted timestamp and start a fresh sequence.
 
 ---
 
@@ -238,36 +234,6 @@ Process B ──┘          │
                        └── safely persisted
 ```
 
-So the little script has some surprisingly serious bookkeeping underneath the hood.
-
----
-
-## ⚡ Setup
-
-Source the script into your shell and expose it as an alias/function so `commit-slot` becomes available as a command.
-
-For example:
-
-```bash
-alias commit-slot='source /path/to/commit-slot'
-```
-
-Then:
-
-```bash
-cd my-project
-
-commit-slot init
-commit-slot
-git commit -m "Add feature"
-```
-
-From that point on, the workflow is delightfully boring:
-
-```text
-commit-slot → git commit → repeat
-```
-
 ---
 
 ## 🎯 Why commit-slot?
@@ -282,7 +248,7 @@ commit-slot → git commit → repeat
 
 **Git-native.** Uses Git's standard `GIT_AUTHOR_DATE` and `GIT_COMMITTER_DATE`.
 
-**Repository-aware.** Automatically works relative to the current Git repository.
+**Repository-aware.** Works relative to the current Git repository.
 
 **Cross-platform date handling.** Supports both GNU `date` and BSD/macOS `date`.
 
