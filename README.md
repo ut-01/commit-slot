@@ -104,27 +104,45 @@ Git sees the generated timestamp automatically.
 
 ## 📥 Install
 
-Download the script into `~/scripts/`:
+Choose the method that works best for you:
+
+### Easy Installer
+
+The fastest way to get started. This script automatically downloads the tool, sets permissions, and configures your shell alias.
 
 ```bash
-mkdir -p ~/scripts
-
-curl -L \
-  https://raw.githubusercontent.com/ut-01/commit-slot/main/commit-slot.sh \
-  -o ~/scripts/commit-slot.sh
+curl -sL https://raw.githubusercontent.com/ut-01/commit-slot/main/install.sh | sh
 ```
 
-Make it executable:
+*Note: The installer will detect your shell (`.zshrc` or `.bashrc`) and update it automatically. Restart your terminal to start using `commit-slot`.*
 
-```bash
-chmod +x ~/scripts/commit-slot.sh
-```
+### Manual Install
 
-Then expose it as a shell command:
+If you prefer to install manually, follow these steps:
 
-```bash
-alias commit-slot='source ~/scripts/commit-slot.sh'
-```
+1.  **Create the directory:**
+    ```bash
+    mkdir -p ~/scripts
+    ```
+
+2.  **Download the script:**
+    ```bash
+    curl -L \
+      https://raw.githubusercontent.com/ut-01/commit-slot/main/commit-slot.sh \
+      -o ~/scripts/commit-slot.sh
+    ```
+
+3.  **Make it executable:**
+    ```bash
+    chmod +x ~/scripts/commit-slot.sh
+    ```
+
+4.  **Expose it as a shell command:**
+    Add the following line to your `~/.zshrc` or `~/.bashrc`:
+    ```text
+    alias commit-slot='source ~/scripts/commit-slot.sh'
+    ```
+    *Tip: Reload your shell configuration with `source ~/.zshrc` (or `.bashrc`).*
 
 Now from any Git repository:
 
@@ -133,8 +151,6 @@ commit-slot init
 commit-slot
 git commit -m "Add feature"
 ```
-
-> **Tip:** Put the alias in your `~/.zshrc` or `~/.bashrc` to make `commit-slot` available in every new terminal.
 
 ---
 
@@ -200,13 +216,13 @@ The script avoids generating timestamps inside the restricted window.
 
 ## 🛠 Commands
 
-```text
-commit-slot init       Enable commit-slot for this repository
-commit-slot            Generate and export the next timestamp
-commit-slot status     Show current slot information
-commit-slot reset      Reset the persisted timestamp
-commit-slot help       Show available commands
-```
+| Command | Description |
+| :--- | :--- |
+| `commit-slot init` | Enable commit-slot for this repository |
+| `commit-slot` | Generate and export the next timestamp |
+| `commit-slot status` | Show current slot information |
+| `commit-slot reset` | Reset the persisted timestamp |
+| `commit-slot help` | Show available commands |
 
 ### Status example
 
@@ -238,21 +254,14 @@ Process B ──┘          │
 
 ## 🎯 Why commit-slot?
 
-**Tiny.** One shell script.
-
-**Fast.** No dependencies, database, daemon, or service.
-
-**Persistent.** Remembers the last generated slot.
-
-**Randomized.** Consecutive timestamps aren't mechanically identical.
-
-**Git-native.** Uses Git's standard `GIT_AUTHOR_DATE` and `GIT_COMMITTER_DATE`.
-
-**Repository-aware.** Works relative to the current Git repository.
-
-**Cross-platform date handling.** Supports both GNU `date` and BSD/macOS `date`.
-
-**Safe.** Uses locking and atomic state updates.
+*   **Tiny:** One shell script.
+*   **Fast:** No dependencies, database, daemon, or service.
+*   **Persistent:** Remembers the last generated slot.
+*   **Randomized:** Consecutive timestamps aren't mechanically identical.
+*   **Git-native:** Uses Git's standard `GIT_AUTHOR_DATE` and `GIT_COMMITTER_DATE`.
+*   **Repository-aware:** Works relative to the current Git repository.
+*   **Cross-platform date handling:** Supports both GNU `date` and BSD/macOS `date`.
+*   **Safe:** Uses locking and atomic state updates.
 
 ---
 

@@ -318,7 +318,7 @@ release_lock() {
 
 
 # ============================================================
-# Read persisted pointer
+# Read persisted Pointer
 # ============================================================
 
 read_pointer() {
@@ -349,18 +349,18 @@ latest_commit_epoch() {
 
 
 # ============================================================
-# Write persisted pointer atomically
+# Write persisted Pointer atomically
 # ============================================================
 
 write_pointer() {
     timestamp="$1"
     tmp_file="${SLOT_FILE}.tmp.$$"
-    found_pointer=false
+    found_POINTER=false
 
     if ! while IFS='=' read -r key value; do
         if [ "$key" = "pointer" ]; then
-            printf 'pointer=%s\n' "$timestamp"
-            found_pointer=true
+            printf 'POINTER=%s\n' "$timestamp"
+            found_POINTER=true
         else
             printf '%s=%s\n' "$key" "$value"
         fi
@@ -370,8 +370,8 @@ write_pointer() {
         return 1
     fi
 
-    if ! $found_pointer; then
-        printf 'pointer=%s\n' "$timestamp" >> "$tmp_file"
+    if ! $FOUND_POINTER; then
+        printf 'POINTER=%s\n' "$timestamp" >> "$tmp_file"
     fi
 
     if ! mv "$tmp_file" "$SLOT_FILE"; then
@@ -389,7 +389,25 @@ write_pointer() {
 init_repository() {
 
     if [ ! -f "$SLOT_FILE" ]; then
-        printf 'pointer=\n' > "$SLOT_FILE"
+        cat > "$SLOT_FILE" <<'CFG'
+# commit-slot configuration
+
+# Timezone for generating timestamps. Default: Asia/Kolkata
+#TIMEZONE=Asia/Kolkata
+
+# Restricted time window (HH:MM format). Commits cannot be scheduled within this window.
+# Default START: 12:00, Default END: 18:00
+#RESTRICTED_START=12:00
+#RESTRICTED_END=18:00
+
+# Random interval between consecutive commit slots (in minutes).
+# Default MIN: 5, Default MAX: 7
+#MIN_INTERVAL=5
+#MAX_INTERVAL=7
+
+# Internal Pointer for tracking the last generated timestamp (managed by commit-slot)
+POINTER=
+CFG
         echo "commit-slot: created commit-slot.cfg"
     else
         echo "commit-slot: commit-slot.cfg already exists"
@@ -459,14 +477,14 @@ reset_repository() {
         return 1
     fi
 
-    printf 'pointer=\n' > "$SLOT_FILE"
+    printf 'POINTER=\n' > "$SLOT_FILE"
 
     unset GIT_AUTHOR_DATE
     unset GIT_COMMITTER_DATE
 
     release_lock
 
-    echo "commit-slot: timestamp pointer reset"
+    echo "commit-slot: timestamp Pointer reset"
 }
 
 
@@ -488,7 +506,7 @@ generate_slot() {
 
     read_pointer
 
-    pointer_epoch=0
+    POINTER_EPOCH=0
     commit_epoch=0
 
     today_start="$(today_midnight_epoch)"
@@ -501,9 +519,9 @@ generate_slot() {
 
     # Timestamp from commit-slot.cfg.
     if [ -n "$POINTER" ]; then
-        pointer_epoch="$(timestamp_epoch "$POINTER")"
+        POINTER_EPOCH="$(timestamp_epoch "$POINTER")"
 
-        if [ -z "$pointer_epoch" ]; then
+        if [ -z "$POINTER_EPOCH" ]; then
             release_lock
             echo "commit-slot: invalid timestamp in commit-slot.cfg: $POINTER"
             return 1
@@ -523,8 +541,8 @@ generate_slot() {
         base_epoch="$commit_epoch"
     fi
 
-    if (( pointer_epoch > base_epoch )); then
-        base_epoch="$pointer_epoch"
+    if (( POINTER_EPOCH > base_epoch )); then
+        base_epoch="$POINTER_EPOCH"
     fi
 
     # Add a random 5-7 minute buffer.
