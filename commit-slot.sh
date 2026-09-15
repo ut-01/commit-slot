@@ -325,7 +325,7 @@ read_pointer() {
     POINTER=""
 
     while IFS='=' read -r key value; do
-        if [ "$key" = "pointer" ]; then
+        if [ "$key" = "POINTER" ]; then
             POINTER="$value"
         fi
     done < "$SLOT_FILE"
@@ -358,11 +358,13 @@ write_pointer() {
     found_POINTER=false
 
     if ! while IFS='=' read -r key value; do
-        if [ "$key" = "pointer" ]; then
+        if [ "$key" = "POINTER" ]; then
             printf 'POINTER=%s\n' "$timestamp"
             found_POINTER=true
-        else
+        elif [ -n "$value" ]; then
             printf '%s=%s\n' "$key" "$value"
+        else
+            printf '%s\n' "$key"
         fi
     done < "$SLOT_FILE" > "$tmp_file"; then
         rm -f "$tmp_file"
