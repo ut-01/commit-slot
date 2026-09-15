@@ -52,11 +52,15 @@ usage() {
 commit-slot
 
 Usage:
-  commit-slot init       Enable commit-slot for this repository
-  commit-slot             Generate and export the next timestamp
-  commit-slot status      Show current slot information
-  commit-slot reset       Reset the persisted timestamp
-  commit-slot help        Show this help
+  commit-slot init [HH:MM-HH:MM]   Enable commit-slot for this repository
+  commit-slot                       Generate and export the next timestamp
+  commit-slot status                Show current slot information
+  commit-slot reset                 Reset the persisted timestamp
+  commit-slot help                  Show this help
+
+Examples:
+  commit-slot init                  Create default config
+  commit-slot init 06:00-18:00      Create config with restricted window 6am-6pm
 EOF
 }
 
@@ -389,9 +393,65 @@ write_pointer() {
 # ============================================================
 
 init_repository() {
+    time_range="$1"
+    restricted_start=""
+    restricted_end=""
+
+    # Parse time range if provided
+    if [ -n "$time_range" ]; then
+        # Validate format: HH:MM-HH:MM
+        case "$time_range" in
+            *-*)
+                start_time="${time_range%-*}"
+                end_time="${time_range#*-}"
+
+                if ! is_valid_hhmm "$start_time"; then
+                    echo "commit-slot: invalid start time: $start_time (expected HH:MM)"
+                    return 1
+                fi
+
+                if ! is_valid_hhmm "$end_time"; then
+                    echo "commit-slot: invalid end time: $end_time (expected HH:MM)"
+                    return 1
+                fi
+
+                if (( $(hhmm_to_seconds "$start_time") >= $(hhmm_to_seconds "$end_time") )); then
+                    echo "commit-slot: start time must be earlier than end time"
+                    return 1
+                fi
+
+                restricted_start="RESTRICTED_START=$start_time"
+                restricted_end="RESTRICTED_END=$end_time"
+                ;;
+            *)
+                echo "commit-slot: invalid time range format: $time_range (expected HH:MM-HH:MM)"
+                return 1
+                ;;
+        esac
+    fi
 
     if [ ! -f "$SLOT_FILE" ]; then
-        cat > "$SLOT_FILE" <<'CFG'
+        if [ -n "$restricted_start" ]; then
+            cat > "$SLOT_FILE" <<CFG
+# commit-slot configuration
+
+# Timezone for generating timestamps. Default: Asia/Kolkata
+#TIMEZONE=Asia/Kolkata
+
+# Restricted time window (HH:MM format). Commits cannot be scheduled within this window.
+$restricted_start
+$restricted_end
+
+# Random interval between consecutive commit slots (in minutes).
+# Default MIN: 5, Default MAX: 7
+#MIN_INTERVAL=5
+#MAX_INTERVAL=7
+
+# Internal Pointer for tracking the last generated timestamp (managed by commit-slot)
+POINTER=
+CFG
+        else
+            cat > "$SLOT_FILE" <<'CFG'
 # commit-slot configuration
 
 # Timezone for generating timestamps. Default: Asia/Kolkata
@@ -410,6 +470,7 @@ init_repository() {
 # Internal Pointer for tracking the last generated timestamp (managed by commit-slot)
 POINTER=
 CFG
+        fi
         echo "commit-slot: created commit-slot.cfg"
     else
         echo "commit-slot: commit-slot.cfg already exists"
@@ -600,7 +661,7 @@ generate_slot() {
 case "${1:-}" in
 
     init)
-        init_repository
+        init_repository "$2"
         ;;
 
     status)
